@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
+import BudgetForm from './components/BudgetForm.jsx'
+import ExpenseForm from './components/ExpenseForm.jsx'
 
 const categories = ['Food & drink', 'Transport', 'Shopping', 'Home', 'Health', 'Other']
 
@@ -215,15 +217,13 @@ function App() {
             <p className="budget-empty-copy">Set a spending limit to track your progress through the month.</p>
           )}
         </div>
-        <form className="budget-form" onSubmit={handleBudgetSubmit}>
-          <label htmlFor="monthlyBudget">{monthlyBudget ? 'Update monthly limit' : 'Monthly limit'}</label>
-          <div className="budget-form-row">
-            <div className="amount-input"><span>$</span><input id="monthlyBudget" name="monthlyBudget" type="number" min="0.01" step="0.01" placeholder="e.g. 2500" value={budgetAmount} onChange={(event) => setBudgetAmount(event.target.value)} required /></div>
-            <button className="budget-save-button" type="submit" disabled={savingBudget}>
-              {savingBudget ? 'Saving…' : monthlyBudget ? 'Update' : 'Set budget'}
-            </button>
-          </div>
-        </form>
+        <BudgetForm
+          amount={budgetAmount}
+          onAmountChange={(event) => setBudgetAmount(event.target.value)}
+          onSubmit={handleBudgetSubmit}
+          hasBudget={Boolean(monthlyBudget)}
+          saving={savingBudget}
+        />
       </section>
 
       <section className="workspace-grid">
@@ -262,48 +262,19 @@ function App() {
           )}
         </section>
 
-        <section className="panel form-panel">
-          <div className="panel-heading form-heading">
-            <div>
-              <p className="eyebrow">KEEP IT UP TO DATE</p>
-              <h2>Add an expense</h2>
-            </div>
-            <span className="plus-mark">+</span>
-          </div>
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="description">What did you spend on?</label>
-            <input
-              id="description"
-              name="description"
-              placeholder="e.g. Weekly groceries"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              maxLength={120}
-              required
-            />
-
-            <div className="form-row">
-              <div className="field-group">
-                <label htmlFor="amount">Amount</label>
-                <div className="amount-input"><span>$</span><input id="amount" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" value={amount} onChange={(event) => setAmount(event.target.value)} required /></div>
-              </div>
-              <div className="field-group">
-                <label htmlFor="spentOn">Date</label>
-                <input id="spentOn" name="spentOn" type="date" value={spentOn} onChange={(event) => setSpentOn(event.target.value)} required />
-              </div>
-            </div>
-
-            <label htmlFor="category">Category</label>
-            <select id="category" name="category" value={category} onChange={(event) => setCategory(event.target.value)}>
-              {categories.map((item) => <option key={item}>{item}</option>)}
-            </select>
-
-            <button className="submit-button" type="submit" disabled={saving}>
-              {saving ? 'Saving…' : 'Add expense'} <span aria-hidden="true">→</span>
-            </button>
-          </form>
-          <p className="form-note"><span>🔒</span> Your entries are saved to your PennyWise database.</p>
-        </section>
+        <ExpenseForm
+          categories={categories}
+          description={description}
+          amount={amount}
+          category={category}
+          spentOn={spentOn}
+          saving={saving}
+          onDescriptionChange={(event) => setDescription(event.target.value)}
+          onAmountChange={(event) => setAmount(event.target.value)}
+          onCategoryChange={(event) => setCategory(event.target.value)}
+          onSpentOnChange={(event) => setSpentOn(event.target.value)}
+          onSubmit={handleSubmit}
+        />
       </section>
       <footer className="footer">Small steps today. More confidence tomorrow.</footer>
     </main>

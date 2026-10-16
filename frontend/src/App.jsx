@@ -17,12 +17,15 @@ function localDateToday() {
 
 function App() {
   const [expenses, setExpenses] = useState([])
+  const [monthlyBudget, setMonthlyBudget] = useState(null)
+  const [budgetAmount, setBudgetAmount] = useState('')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState(categories[0])
   const [spentOn, setSpentOn] = useState(localDateToday)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [savingBudget, setSavingBudget] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -48,6 +51,30 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    const month = localDateToday().slice(0, 7)
+
+    fetch(`/api/budgets/${month}`)
+      .then((response) => {
+        if (response.status === 204) return null
+        if (!response.ok) throw new Error('Could not load this month’s budget.')
+        return response.json()
+      })
+      .then((data) => {
+        if (cancelled) return
+        setMonthlyBudget(data)
+        setBudgetAmount(data ? String(data.amount) : '')
+      })
+      .catch((requestError) => {
+        if (!cancelled) setError(requestError.message)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const totalSpent = useMemo(
     () => expenses.reduce((total, expense) => total + Number(expense.amount), 0),
     [expenses],
@@ -59,6 +86,32 @@ function App() {
       .filter((expense) => expense.spentOn.startsWith(currentMonth))
       .reduce((total, expense) => total + Number(expense.amount), 0)
   }, [expenses])
+
+  const budgetPercent = monthlyBudget
+    ? Math.round((monthlyTotal / Number(monthlyBudget.amount)) * 100)
+    : 0
+
+  async function handleBudgetSubmit(event) {
+    event.preventDefault()
+    setError('')
+    setSavingBudget(true)
+
+    try {
+      const month = localDateToday().slice(0, 7)
+      const response = await fetch(`/api/budgets/${month}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: Number(budgetAmount) }),
+      })
+
+      if (!response.ok) throw new Error('Could not save your monthly budget. Check the amount and try again.')
+      setMonthlyBudget(await response.json())
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setSavingBudget(false)
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -132,6 +185,45 @@ function App() {
           <p className="summary-value">{expenses.length}</p>
           <p className="summary-caption">Expenses recorded</p>
         </article>
+      </section>
+
+      <section className="panel budget-panel" aria-labelledby="budget-title">
+        <div className="budget-overview">
+          <div className="budget-heading">
+            <span className="budget-icon" aria-hidden="true">◎</span>
+            <div>
+              <p className="eyebrow">A PLAN FOR THIS MONTH</p>
+              <h2 id="budget-title">Monthly budget</h2>
+            </div>
+          </div>
+          {monthlyBudget ? (
+            <>
+              <div className="budget-values">
+                <strong>{currency.format(monthlyTotal)} <span>spent</span></strong>
+                <span>of {currency.format(Number(monthlyBudget.amount))}</span>
+              </div>
+              <div className="budget-progress-track" role="progressbar" aria-label="Monthly budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.min(budgetPercent, 100)}>
+                <div className={`budget-progress-fill ${budgetPercent >= 90 ? 'is-near-limit' : ''}`} style={{ width: `${Math.min(budgetPercent, 100)}%` }} />
+              </div>
+              <p className={`budget-caption ${budgetPercent >= 100 ? 'over-budget' : ''}`}>
+                {budgetPercent >= 100
+                  ? `${currency.format(monthlyTotal - Number(monthlyBudget.amount))} over your monthly limit`
+                  : `${currency.format(Number(monthlyBudget.amount) - monthlyTotal)} left · ${budgetPercent}% used`}
+              </p>
+            </>
+          ) : (
+            <p className="budget-empty-copy">Set a spending limit to track your progress through the month.</p>
+          )}
+        </div>
+        <form className="budget-form" onSubmit={handleBudgetSubmit}>
+          <label htmlFor="monthlyBudget">{monthlyBudget ? 'Update monthly limit' : 'Monthly limit'}</label>
+          <div className="budget-form-row">
+            <div className="amount-input"><span>$</span><input id="monthlyBudget" name="monthlyBudget" type="number" min="0.01" step="0.01" placeholder="e.g. 2500" value={budgetAmount} onChange={(event) => setBudgetAmount(event.target.value)} required /></div>
+            <button className="budget-save-button" type="submit" disabled={savingBudget}>
+              {savingBudget ? 'Saving…' : monthlyBudget ? 'Update' : 'Set budget'}
+            </button>
+          </div>
+        </form>
       </section>
 
       <section className="workspace-grid">

@@ -21,6 +21,9 @@ function App() {
   const [expenses, setExpenses] = useState([])
   const [monthlyBudget, setMonthlyBudget] = useState(null)
   const [budgetAmount, setBudgetAmount] = useState('')
+  const [categoryBudgets, setCategoryBudgets] = useState([])
+  const [categoryBudgetCategory, setCategoryBudgetCategory] = useState(categories[0])
+  const [categoryBudgetAmount, setCategoryBudgetAmount] = useState('')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState(categories[0])
@@ -28,6 +31,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savingBudget, setSavingBudget] = useState(false)
+  const [savingCategoryBudget, setSavingCategoryBudget] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -46,6 +50,33 @@ function App() {
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const month = localDateToday().slice(0, 7)
+
+    fetch(`/api/category-budgets/${month}`)
+      .then((response) => {
+        if (!response.ok) throw new Error('Could not load this month’s category budgets.')
+        return response.json()
+      })
+      .then((data) => {
+        if (cancelled) return
+        setCategoryBudgets(data)
+        const firstBudget = data[0]
+        if (firstBudget) {
+          setCategoryBudgetCategory(firstBudget.category)
+          setCategoryBudgetAmount(String(firstBudget.amount))
+        }
+      })
+      .catch((requestError) => {
+        if (!cancelled) setError(requestError.message)
       })
 
     return () => {
@@ -92,6 +123,44 @@ function App() {
   const budgetPercent = monthlyBudget
     ? Math.round((monthlyTotal / Number(monthlyBudget.amount)) * 100)
     : 0
+
+  const currentMonth = localDateToday().slice(0, 7)
+  const categorySpent = useMemo(() => {
+    const totals = new Map(categories.map((name) => [name, 0]))
+    expenses
+      .filter((expense) => expense.spentOn.startsWith(currentMonth))
+      .forEach((expense) => totals.set(expense.category, (totals.get(expense.category) || 0) + Number(expense.amount)))
+    return totals
+  }, [expenses, currentMonth])
+
+  async function handleCategoryBudgetSubmit(event) {
+    event.preventDefault()
+    setError('')
+    setSavingCategoryBudget(true)
+
+    try {
+      const response = await fetch(`/api/category-budgets/${currentMonth}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: categoryBudgetCategory, amount: Number(categoryBudgetAmount) }),
+      })
+      if (!response.ok) throw new Error('Could not save this category budget. Check the amount and try again.')
+      const savedBudget = await response.json()
+      setCategoryBudgets((current) => [...current.filter((item) => item.category !== savedBudget.category), savedBudget]
+        .sort((a, b) => a.category.localeCompare(b.category)))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setSavingCategoryBudget(false)
+    }
+  }
+
+  function handleCategoryBudgetSelection(event) {
+    const selectedCategory = event.target.value
+    setCategoryBudgetCategory(selectedCategory)
+    const existing = categoryBudgets.find((item) => item.category === selectedCategory)
+    setCategoryBudgetAmount(existing ? String(existing.amount) : '')
+  }
 
   async function handleBudgetSubmit(event) {
     event.preventDefault()
@@ -224,6 +293,56 @@ function App() {
           hasBudget={Boolean(monthlyBudget)}
           saving={savingBudget}
         />
+      </section>
+
+      <section className="panel category-budgets-panel" aria-labelledby="category-budgets-title">
+        <div className="panel-heading category-budgets-heading">
+          <div>
+            <h2 id="category-budgets-title">Category budgets</h2>
+            <p>Set monthly limits and see how each category is tracking.</p>
+          </div>
+        </div>
+        <form className="category-budget-form" onSubmit={handleCategoryBudgetSubmit}>
+          <div className="category-budget-field">
+            <label htmlFor="budget-category">Category</label>
+            <select id="budget-category" value={categoryBudgetCategory} onChange={handleCategoryBudgetSelection}>
+              {categories.map((name) => <option key={name} value={name}>{name}</option>)}
+            </select>
+          </div>
+          <div className="category-budget-field">
+            <label htmlFor="category-budget-amount">Monthly limit</label>
+            <div className="category-budget-entry">
+              <span>$</span>
+              <input id="category-budget-amount" type="number" min="0.01" step="0.01" required value={categoryBudgetAmount} onChange={(event) => setCategoryBudgetAmount(event.target.value)} placeholder="0.00" />
+            </div>
+          </div>
+          <button className="budget-save-button" type="submit" disabled={savingCategoryBudget || !categoryBudgetAmount}>{savingCategoryBudget ? 'Saving…' : 'Save limit'}</button>
+        </form>
+        {categoryBudgets.length === 0 ? (
+          <p className="category-budgets-empty">No category limits yet. Choose a category above to set your first one.</p>
+        ) : (
+          <div className="category-budget-list">
+            {categoryBudgets.map((budget) => {
+              const spent = categorySpent.get(budget.category) || 0
+              const limit = Number(budget.amount)
+              const percent = Math.round((spent / limit) * 100)
+              return (
+                <article className="category-budget-row" key={budget.id}>
+                  <div className="category-budget-topline">
+                    <strong>{budget.category}</strong>
+                    <span>{currency.format(spent)} <span>of {currency.format(limit)}</span></span>
+                  </div>
+                  <div className="budget-progress-track" role="progressbar" aria-label={`${budget.category} budget used`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.min(percent, 100)}>
+                    <div className={`budget-progress-fill ${percent >= 90 ? 'is-near-limit' : ''} ${percent >= 100 ? 'is-over-limit' : ''}`} style={{ width: `${Math.min(percent, 100)}%` }} />
+                  </div>
+                  <p className={`budget-caption ${percent >= 100 ? 'over-budget' : ''}`}>
+                    {percent >= 100 ? `${currency.format(spent - limit)} over limit` : `${currency.format(limit - spent)} left · ${percent}% used`}
+                  </p>
+                </article>
+              )
+            })}
+          </div>
+        )}
       </section>
 
       <section className="workspace-grid">

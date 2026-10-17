@@ -98,6 +98,9 @@
 .expense-main span { color: #8b938b; font-size: 10px; }
 .separator { padding: 0 3px; }
 .expense-amount { flex-shrink: 0; color: #323c34; font-size: 12px; }
+.delete-expense-button { flex-shrink: 0; padding: 6px 8px; border: 1px solid transparent; border-radius: 6px; color: #8e625d; background: transparent; cursor: pointer; font: inherit; font-size: 10px; font-weight: 650; }
+.delete-expense-button:hover:not(:disabled) { border-color: #f0d9d6; color: #9d4038; background: #fff5f3; }
+.delete-expense-button:disabled { cursor: wait; opacity: .65; }
 .empty-state { display: flex; min-height: 245px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 25px; box-sizing: border-box; text-align: center; color: #889188; font-size: 11px; }
 .empty-state strong { color: #37433a; font-size: 13px; }
 .empty-icon { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 3px; border-radius: 13px; color: var(--green); background: #eff5ee; font-size: 20px; }

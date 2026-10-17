@@ -32,6 +32,7 @@ function App() {
   const [saving, setSaving] = useState(false)
   const [savingBudget, setSavingBudget] = useState(false)
   const [savingCategoryBudget, setSavingCategoryBudget] = useState(false)
+  const [deletingExpenseId, setDeletingExpenseId] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -218,6 +219,21 @@ function App() {
     }
   }
 
+  async function handleDeleteExpense(expense) {
+    setError('')
+    setDeletingExpenseId(expense.id)
+
+    try {
+      const response = await fetch(`/api/expenses/${expense.id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Could not delete this expense. Please try again.')
+      setExpenses((current) => current.filter((item) => item.id !== expense.id))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setDeletingExpenseId(null)
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -375,6 +391,16 @@ function App() {
                     <span>{expense.category} <span className="separator">·</span> {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${expense.spentOn}T12:00:00`))}</span>
                   </div>
                   <strong className="expense-amount">−{currency.format(Number(expense.amount))}</strong>
+                  <button
+                    className="delete-expense-button"
+                    type="button"
+                    aria-label={`Delete ${expense.description}`}
+                    title="Delete expense"
+                    disabled={deletingExpenseId !== null}
+                    onClick={() => handleDeleteExpense(expense)}
+                  >
+                    {deletingExpenseId === expense.id ? 'Deleting…' : 'Delete'}
+                  </button>
                 </li>
               ))}
             </ul>

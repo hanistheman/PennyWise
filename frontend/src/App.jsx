@@ -33,6 +33,7 @@ function App() {
   const [savingBudget, setSavingBudget] = useState(false)
   const [savingCategoryBudget, setSavingCategoryBudget] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState(null)
+  const [editingExpenseId, setEditingExpenseId] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -191,8 +192,8 @@ function App() {
     setSaving(true)
 
     try {
-      const response = await fetch('/api/expenses', {
-        method: 'POST',
+      const response = await fetch(editingExpenseId ? `/api/expenses/${editingExpenseId}` : '/api/expenses', {
+        method: editingExpenseId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           description,
@@ -202,21 +203,42 @@ function App() {
         }),
       })
 
-      if (!response.ok) throw new Error('Could not save this expense. Check the details and try again.')
+      if (!response.ok) {
+        throw new Error(editingExpenseId
+          ? 'Could not update this expense. Check the details and try again.'
+          : 'Could not save this expense. Check the details and try again.')
+      }
 
       const savedExpense = await response.json()
-      setExpenses((current) => [savedExpense, ...current].sort((a, b) =>
-        b.spentOn.localeCompare(a.spentOn) || b.id - a.id,
-      ))
-      setDescription('')
-      setAmount('')
-      setCategory(categories[0])
-      setSpentOn(localDateToday())
+      setExpenses((current) => [
+        ...current.filter((expense) => expense.id !== savedExpense.id),
+        savedExpense,
+      ].sort((a, b) => b.spentOn.localeCompare(a.spentOn) || b.id - a.id))
+      resetExpenseForm()
     } catch (requestError) {
       setError(requestError.message)
     } finally {
       setSaving(false)
     }
+  }
+
+  function beginEditingExpense(expense) {
+    setEditingExpenseId(expense.id)
+    setDescription(expense.description)
+    setAmount(String(expense.amount))
+    setCategory(expense.category)
+    setSpentOn(expense.spentOn)
+    setError('')
+    document.getElementById('expense-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  function resetExpenseForm() {
+    setEditingExpenseId(null)
+    setDescription('')
+    setAmount('')
+    setCategory(categories[0])
+    setSpentOn(localDateToday())
+    setError('')
   }
 
   async function handleDeleteExpense(expense) {
@@ -227,6 +249,7 @@ function App() {
       const response = await fetch(`/api/expenses/${expense.id}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Could not delete this expense. Please try again.')
       setExpenses((current) => current.filter((item) => item.id !== expense.id))
+      if (editingExpenseId === expense.id) resetExpenseForm()
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -391,16 +414,27 @@ function App() {
                     <span>{expense.category} <span className="separator">·</span> {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${expense.spentOn}T12:00:00`))}</span>
                   </div>
                   <strong className="expense-amount">−{currency.format(Number(expense.amount))}</strong>
-                  <button
-                    className="delete-expense-button"
-                    type="button"
-                    aria-label={`Delete ${expense.description}`}
-                    title="Delete expense"
-                    disabled={deletingExpenseId !== null}
-                    onClick={() => handleDeleteExpense(expense)}
-                  >
-                    {deletingExpenseId === expense.id ? 'Deleting…' : 'Delete'}
-                  </button>
+                  <div className="expense-actions">
+                    <button
+                      className="edit-expense-button"
+                      type="button"
+                      aria-label={`Edit ${expense.description}`}
+                      disabled={saving || deletingExpenseId !== null}
+                      onClick={() => beginEditingExpense(expense)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-expense-button"
+                      type="button"
+                      aria-label={`Delete ${expense.description}`}
+                      title="Delete expense"
+                      disabled={saving || deletingExpenseId !== null}
+                      onClick={() => handleDeleteExpense(expense)}
+                    >
+                      {deletingExpenseId === expense.id ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -414,11 +448,13 @@ function App() {
           category={category}
           spentOn={spentOn}
           saving={saving}
+          isEditing={editingExpenseId !== null}
           onDescriptionChange={(event) => setDescription(event.target.value)}
           onAmountChange={(event) => setAmount(event.target.value)}
           onCategoryChange={(event) => setCategory(event.target.value)}
           onSpentOnChange={(event) => setSpentOn(event.target.value)}
           onSubmit={handleSubmit}
+          onCancel={resetExpenseForm}
         />
       </section>
       <footer className="footer">Small steps today. More confidence tomorrow.</footer>

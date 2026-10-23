@@ -98,9 +98,13 @@
 .expense-main span { color: #8b938b; font-size: 10px; }
 .separator { padding: 0 3px; }
 .expense-amount { flex-shrink: 0; color: #323c34; font-size: 12px; }
+.expense-actions { display: flex; flex-shrink: 0; align-items: center; gap: 2px; }
+.edit-expense-button, .delete-expense-button { padding: 6px 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; cursor: pointer; font: inherit; font-size: 10px; font-weight: 650; }
+.edit-expense-button { color: #58735c; }
+.edit-expense-button:hover:not(:disabled) { border-color: #dce8dd; background: #f3f7f2; }
 .delete-expense-button { flex-shrink: 0; padding: 6px 8px; border: 1px solid transparent; border-radius: 6px; color: #8e625d; background: transparent; cursor: pointer; font: inherit; font-size: 10px; font-weight: 650; }
 .delete-expense-button:hover:not(:disabled) { border-color: #f0d9d6; color: #9d4038; background: #fff5f3; }
-.delete-expense-button:disabled { cursor: wait; opacity: .65; }
+.edit-expense-button:disabled, .delete-expense-button:disabled { cursor: wait; opacity: .65; }
 .empty-state { display: flex; min-height: 245px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 25px; box-sizing: border-box; text-align: center; color: #889188; font-size: 11px; }
 .empty-state strong { color: #37433a; font-size: 13px; }
 .empty-icon { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 3px; border-radius: 13px; color: var(--green); background: #eff5ee; font-size: 20px; }
@@ -124,6 +128,11 @@
 .submit-button:hover:not(:disabled) { background: #315b40; transform: translateY(-1px); }
 .submit-button:disabled { cursor: wait; opacity: .7; }
 .submit-button span { font-size: 17px; }
+.form-actions { display: flex; align-items: center; gap: 9px; margin-top: 9px; }
+.form-actions .submit-button { flex: 1; margin-top: 0; }
+.cancel-edit-button { height: 42px; padding: 0 13px; border: 1px solid #e2e7e0; border-radius: 8px; color: #5d685f; background: #fff; cursor: pointer; font: inherit; font-size: 11px; font-weight: 650; }
+.cancel-edit-button:hover:not(:disabled) { background: #f5f7f4; }
+.cancel-edit-button:disabled { cursor: wait; opacity: .65; }
 .form-note { display: flex; align-items: center; gap: 6px; padding: 13px 22px 0; color: #959d95; font-size: 9px; }
 .error-message { margin: 14px 22px 0; padding: 10px 12px; border-radius: 7px; color: #8f3833; background: #fff0ee; font-size: 11px; }
 .footer { padding: 24px 0 30px; color: #a1a8a1; text-align: center; font-size: 10px; }

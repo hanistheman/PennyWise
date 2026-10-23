@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -30,13 +31,29 @@ public class ExpenseController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public Expense createExpense(@Valid @RequestBody CreateExpenseRequest request) {
+	public Expense createExpense(@Valid @RequestBody ExpenseRequest request) {
 		Expense expense = new Expense(
 				request.description().trim(),
 				request.amount(),
 				request.category().trim(),
 				request.spentOn());
 		return expenseRepository.save(expense);
+	}
+
+	@PutMapping("/{id}")
+	public ResponseEntity<Expense> updateExpense(
+			@PathVariable Long id,
+			@Valid @RequestBody ExpenseRequest request) {
+		return expenseRepository.findById(id)
+				.map(expense -> {
+					expense.update(
+							request.description().trim(),
+							request.amount(),
+							request.category().trim(),
+							request.spentOn());
+					return ResponseEntity.ok(expenseRepository.save(expense));
+				})
+				.orElseGet(() -> ResponseEntity.notFound().build());
 	}
 
 	@DeleteMapping("/{id}")

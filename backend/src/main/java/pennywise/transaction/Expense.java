@@ -58,4 +58,11 @@ public class Expense {
 	public LocalDate getSpentOn() {
 		return spentOn;
 	}
+
+	public void update(String description, BigDecimal amount, String category, LocalDate spentOn) {
+		this.description = description;
+		this.amount = amount;
+		this.category = category;
+		this.spentOn = spentOn;
+	}
 }

@@ -7,20 +7,22 @@ function ExpenseForm({
   category,
   spentOn,
   saving,
+  isEditing,
   onDescriptionChange,
   onAmountChange,
   onCategoryChange,
   onSpentOnChange,
   onSubmit,
+  onCancel,
 }) {
   return (
-    <section className="panel form-panel">
+    <section className="panel form-panel" id="expense-form">
       <div className="panel-heading form-heading">
         <div>
-          <p className="eyebrow">KEEP IT UP TO DATE</p>
-          <h2>Add an expense</h2>
+          <p className="eyebrow">{isEditing ? 'UPDATE YOUR RECORD' : 'KEEP IT UP TO DATE'}</p>
+          <h2>{isEditing ? 'Edit expense' : 'Add an expense'}</h2>
         </div>
-        <span className="plus-mark">+</span>
+        <span className="plus-mark">{isEditing ? '✎' : '+'}</span>
       </div>
       <form onSubmit={onSubmit}>
         <label htmlFor="description">What did you spend on?</label>
@@ -55,9 +57,12 @@ function ExpenseForm({
           {categories.map((item) => <option key={item}>{item}</option>)}
         </select>
 
-        <button className="submit-button" type="submit" disabled={saving}>
-          {saving ? 'Saving…' : 'Add expense'} <span aria-hidden="true">→</span>
-        </button>
+        <div className="form-actions">
+          <button className="submit-button" type="submit" disabled={saving}>
+            {saving ? 'Saving…' : isEditing ? 'Save changes' : 'Add expense'} <span aria-hidden="true">→</span>
+          </button>
+          {isEditing && <button className="cancel-edit-button" type="button" onClick={onCancel} disabled={saving}>Cancel</button>}
+        </div>
       </form>
       <p className="form-note"><span aria-hidden="true">🔒</span> Your entries are saved to your PennyWise database.</p>
     </section>

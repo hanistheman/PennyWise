@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import BudgetForm from './components/BudgetForm.jsx'
 import ExpenseForm from './components/ExpenseForm.jsx'
+import SpendingCharts from './components/SpendingCharts.jsx'
 
 const categories = ['Food & drink', 'Transport', 'Shopping', 'Home', 'Health', 'Other']
 
@@ -296,6 +297,8 @@ function App() {
           <p className="summary-caption">Expenses recorded</p>
         </article>
       </section>
+
+      <SpendingCharts expenses={expenses} categories={categories} currentMonth={currentMonth} />
 
       <section className="panel budget-panel" aria-labelledby="budget-title">
         <div className="budget-overview">

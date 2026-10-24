@@ -3,6 +3,7 @@ import './App.css'
 import BudgetForm from './components/BudgetForm.jsx'
 import ExpenseForm from './components/ExpenseForm.jsx'
 import SpendingCharts from './components/SpendingCharts.jsx'
+import AuthPage from './components/AuthPage.jsx'
 
 const categories = ['Food & drink', 'Transport', 'Shopping', 'Home', 'Health', 'Other']
 
@@ -18,7 +19,7 @@ function localDateToday() {
     .slice(0, 10)
 }
 
-function App() {
+function FinanceApp({ user, onLogout }) {
   const [expenses, setExpenses] = useState([])
   const [monthlyBudget, setMonthlyBudget] = useState(null)
   const [budgetAmount, setBudgetAmount] = useState('')
@@ -265,9 +266,10 @@ function App() {
           <span className="brand-mark">P</span>
           <span>PennyWise</span>
         </a>
-        <div className="profile-chip" aria-label="Personal account">
-          <span className="profile-avatar">H</span>
-          <span className="profile-label">My finances</span>
+        <div className="profile-chip" aria-label="Signed in account">
+          <span className="profile-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+          <span className="profile-label">{user.email}</span>
+          <button className="logout-button" type="button" onClick={onLogout}>Log out</button>
         </div>
       </header>
 
@@ -463,6 +465,35 @@ function App() {
       <footer className="footer">Small steps today. More confidence tomorrow.</footer>
     </main>
   )
+}
+
+function App() {
+  const [user, setUser] = useState(null)
+  const [checkingSession, setCheckingSession] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/auth/me')
+      .then((response) => response.ok ? response.json() : null)
+      .then((currentUser) => { if (!cancelled) setUser(currentUser) })
+      .catch(() => { if (!cancelled) setUser(null) })
+      .finally(() => { if (!cancelled) setCheckingSession(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  async function handleAuthenticated(currentUser) {
+    setUser(currentUser)
+  }
+
+  async function handleLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    setUser(null)
+  }
+
+  if (checkingSession) return <div className="auth-loading">Loading your account…</div>
+  return user
+    ? <FinanceApp user={user} onLogout={handleLogout} />
+    : <AuthPage onAuthenticated={handleAuthenticated} />
 }
 
 export default App

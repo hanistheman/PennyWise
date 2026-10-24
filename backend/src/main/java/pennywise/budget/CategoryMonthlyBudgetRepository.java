@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CategoryMonthlyBudgetRepository extends JpaRepository<CategoryMonthlyBudget, Long> {
 
-	List<CategoryMonthlyBudget> findAllByBudgetMonthOrderByCategoryAsc(String budgetMonth);
+	List<CategoryMonthlyBudget> findAllByOwner_IdAndBudgetMonthOrderByCategoryAsc(Long ownerId, String budgetMonth);
 
-	Optional<CategoryMonthlyBudget> findByBudgetMonthAndCategory(String budgetMonth, String category);
+	Optional<CategoryMonthlyBudget> findByOwner_IdAndBudgetMonthAndCategory(Long ownerId, String budgetMonth, String category);
 }

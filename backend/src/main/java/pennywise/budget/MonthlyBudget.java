@@ -7,11 +7,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import pennywise.auth.AppUser;
 
 @Entity
-@Table(name = "monthly_budgets", uniqueConstraints = @UniqueConstraint(columnNames = "budget_month"))
+@Table(name = "monthly_budgets", uniqueConstraints = @UniqueConstraint(name = "uk_monthly_budget_user_month", columnNames = { "user_id", "budget_month" }))
 public class MonthlyBudget {
 
 	@Id
@@ -24,12 +28,18 @@ public class MonthlyBudget {
 	@Column(nullable = false, precision = 12, scale = 2)
 	private BigDecimal amount;
 
+	@JsonIgnore
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "user_id", nullable = false)
+	private AppUser owner;
+
 	protected MonthlyBudget() {
 	}
 
-	public MonthlyBudget(YearMonth budgetMonth, BigDecimal amount) {
+	public MonthlyBudget(YearMonth budgetMonth, BigDecimal amount, AppUser owner) {
 		this.budgetMonth = budgetMonth.toString();
 		this.amount = amount;
+		this.owner = owner;
 	}
 
 	public Long getId() {

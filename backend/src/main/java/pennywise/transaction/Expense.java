@@ -6,6 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import pennywise.auth.AppUser;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -29,14 +33,20 @@ public class Expense {
 	@Column(nullable = false)
 	private LocalDate spentOn;
 
+	@JsonIgnore
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "user_id", nullable = false)
+	private AppUser owner;
+
 	protected Expense() {
 	}
 
-	public Expense(String description, BigDecimal amount, String category, LocalDate spentOn) {
+	public Expense(String description, BigDecimal amount, String category, LocalDate spentOn, AppUser owner) {
 		this.description = description;
 		this.amount = amount;
 		this.category = category;
 		this.spentOn = spentOn;
+		this.owner = owner;
 	}
 
 	public Long getId() {

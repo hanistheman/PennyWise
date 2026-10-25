@@ -6,12 +6,13 @@ import ExpenseList from './components/ExpenseList.jsx'
 import SpendingCharts from './components/SpendingCharts.jsx'
 import AuthPage from './components/AuthPage.jsx'
 
-const categories = ['Food & drink', 'Transport', 'Shopping', 'Home', 'Health', 'Other']
-
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
+const defaultCategories = ['Food & drink', 'Transport', 'Shopping', 'Home', 'Health', 'Other']
+const currencyOptions = [
+  { code: 'USD', label: 'US Dollar (USD)' },
+  { code: 'CAD', label: 'Canadian Dollar (CAD)' },
+  { code: 'GBP', label: 'British Pound (GBP)' },
+  { code: 'EUR', label: 'Euro (EUR)' },
+]
 
 function localDateToday() {
   const now = new Date()
@@ -21,12 +22,17 @@ function localDateToday() {
 }
 
 function FinanceApp({ user, onLogout }) {
+  const [categories, setCategories] = useState(defaultCategories)
+  const [currencyCode, setCurrencyCode] = useState(user.currencyCode || 'USD')
   const [expenses, setExpenses] = useState([])
   const [monthlyBudget, setMonthlyBudget] = useState(null)
   const [budgetAmount, setBudgetAmount] = useState('')
   const [categoryBudgets, setCategoryBudgets] = useState([])
   const [categoryBudgetCategory, setCategoryBudgetCategory] = useState(categories[0])
   const [categoryBudgetAmount, setCategoryBudgetAmount] = useState('')
+  const [newCategory, setNewCategory] = useState('')
+  const [savingCategory, setSavingCategory] = useState(false)
+  const [savingCurrency, setSavingCurrency] = useState(false)
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState(categories[0])
@@ -38,6 +44,29 @@ function FinanceApp({ user, onLogout }) {
   const [deletingExpenseId, setDeletingExpenseId] = useState(null)
   const [editingExpenseId, setEditingExpenseId] = useState(null)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/categories')
+      .then((response) => {
+        if (!response.ok) throw new Error('Could not load categories.')
+        return response.json()
+      })
+      .then((data) => {
+        if (!cancelled) {
+          const names = data.map((item) => item.name)
+          if (names.length) {
+            setCategories(names)
+            setCategory((current) => names.includes(current) ? current : names[0])
+            setCategoryBudgetCategory((current) => names.includes(current) ? current : names[0])
+          }
+        }
+      })
+      .catch((requestError) => { if (!cancelled) setError(requestError.message) })
+
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -128,6 +157,72 @@ function FinanceApp({ user, onLogout }) {
   const budgetPercent = monthlyBudget
     ? Math.round((monthlyTotal / Number(monthlyBudget.amount)) * 100)
     : 0
+
+  const currency = new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode })
+
+  async function handleAddCategory(event) {
+    event.preventDefault()
+    setError('')
+    setSavingCategory(true)
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCategory.trim() }),
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        throw new Error(body.message || 'Could not add that category.')
+      }
+      const saved = await response.json()
+      setCategories((current) => [...current, saved.name].sort((a, b) => a.localeCompare(b)))
+      setNewCategory('')
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setSavingCategory(false)
+    }
+  }
+
+  async function handleDeleteCategory(name) {
+    setError('')
+    try {
+      const categoryResponse = await fetch('/api/categories')
+      if (!categoryResponse.ok) throw new Error('Could not load categories.')
+      const categoryRecords = await categoryResponse.json()
+      const categoryRecord = categoryRecords.find((item) => item.name === name)
+      if (!categoryRecord) return
+      const response = await fetch(`/api/categories/${categoryRecord.id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Could not remove that category.')
+      const remaining = categories.filter((item) => item !== name)
+      setCategories(remaining)
+      if (category === name) setCategory(remaining[0] || defaultCategories[0])
+      if (categoryBudgetCategory === name) setCategoryBudgetCategory(remaining[0] || defaultCategories[0])
+      setCategoryBudgets((current) => current.filter((item) => item.category !== name))
+    } catch (requestError) {
+      setError(requestError.message)
+    }
+  }
+
+  async function handleCurrencyChange(event) {
+    const nextCurrency = event.target.value
+    setCurrencyCode(nextCurrency)
+    setSavingCurrency(true)
+    setError('')
+    try {
+      const response = await fetch('/api/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currencyCode: nextCurrency }),
+      })
+      if (!response.ok) throw new Error('Could not save your currency preference.')
+    } catch (requestError) {
+      setCurrencyCode(user.currencyCode || 'USD')
+      setError(requestError.message)
+    } finally {
+      setSavingCurrency(false)
+    }
+  }
 
   const currentMonth = localDateToday().slice(0, 7)
   const categorySpent = useMemo(() => {
@@ -301,7 +396,7 @@ function FinanceApp({ user, onLogout }) {
         </article>
       </section>
 
-      <SpendingCharts expenses={expenses} categories={categories} currentMonth={currentMonth} />
+      <SpendingCharts expenses={expenses} categories={categories} currentMonth={currentMonth} currencyCode={currencyCode} />
 
       <section className="panel budget-panel" aria-labelledby="budget-title">
         <div className="budget-overview">
@@ -337,6 +432,7 @@ function FinanceApp({ user, onLogout }) {
           onSubmit={handleBudgetSubmit}
           hasBudget={Boolean(monthlyBudget)}
           saving={savingBudget}
+          currencyCode={currencyCode}
         />
       </section>
 
@@ -357,7 +453,7 @@ function FinanceApp({ user, onLogout }) {
           <div className="category-budget-field">
             <label htmlFor="category-budget-amount">Monthly limit</label>
             <div className="category-budget-entry">
-              <span>$</span>
+              <span>{new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode }).formatToParts(0).find((part) => part.type === 'currency')?.value || currencyCode}</span>
               <input id="category-budget-amount" type="number" min="0.01" step="0.01" required value={categoryBudgetAmount} onChange={(event) => setCategoryBudgetAmount(event.target.value)} placeholder="0.00" />
             </div>
           </div>
@@ -390,6 +486,41 @@ function FinanceApp({ user, onLogout }) {
         )}
       </section>
 
+      <section className="panel preferences-panel" aria-labelledby="preferences-title">
+        <div className="panel-heading">
+          <div>
+            <h2 id="preferences-title">Categories &amp; currency</h2>
+            <p>Personalize the labels and currency used in your dashboard.</p>
+          </div>
+        </div>
+        <div className="preferences-content">
+          <div className="preference-currency">
+            <label htmlFor="currency-code">Display currency</label>
+            <select id="currency-code" value={currencyCode} onChange={handleCurrencyChange} disabled={savingCurrency}>
+              {currencyOptions.map(({ code, label }) => <option key={code} value={code}>{label}</option>)}
+            </select>
+            <p>Amounts are shown in this currency; changing it does not convert existing values.</p>
+          </div>
+          <div className="preference-categories">
+            <form className="new-category-form" onSubmit={handleAddCategory}>
+              <label htmlFor="new-category">Add a category</label>
+              <div className="new-category-row">
+                <input id="new-category" value={newCategory} onChange={(event) => setNewCategory(event.target.value)} maxLength={40} placeholder="e.g. Education" required />
+                <button className="budget-save-button" type="submit" disabled={savingCategory || !newCategory.trim()}>{savingCategory ? 'Adding…' : 'Add'}</button>
+              </div>
+            </form>
+            <ul className="custom-category-list" aria-label="Your categories">
+              {categories.map((name) => (
+                <li key={name}>
+                  <span>{name}</span>
+                  <button type="button" aria-label={`Remove ${name} category`} title={categories.length <= 1 ? 'Keep at least one category' : undefined} disabled={categories.length <= 1} onClick={() => handleDeleteCategory(name)}>Remove</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <section className="workspace-grid">
         <ExpenseList
           expenses={expenses}
@@ -400,10 +531,12 @@ function FinanceApp({ user, onLogout }) {
           deletingExpenseId={deletingExpenseId}
           onEdit={beginEditingExpense}
           onDelete={handleDeleteExpense}
+          currencyCode={currencyCode}
         />
 
         <ExpenseForm
           categories={categories}
+          currencyCode={currencyCode}
           description={description}
           amount={amount}
           category={category}

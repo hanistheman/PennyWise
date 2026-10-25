@@ -24,6 +24,9 @@ public class AppUser {
 	@Column(nullable = false)
 	private Instant createdAt;
 
+	@Column(name = "currency_code", nullable = false, length = 3, columnDefinition = "varchar(3) not null default 'USD'")
+	private String currencyCode = "USD";
+
 	protected AppUser() {}
 
 	public AppUser(String email, String passwordHash) {
@@ -36,4 +39,6 @@ public class AppUser {
 	public String getEmail() { return email; }
 	public String getPasswordHash() { return passwordHash; }
 	public Instant getCreatedAt() { return createdAt; }
+	public String getCurrencyCode() { return currencyCode; }
+	public void setCurrencyCode(String currencyCode) { this.currencyCode = currencyCode; }
 }

@@ -1,18 +1,13 @@
 import { useMemo } from 'react'
 
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-})
-
 const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'short' })
 
 function getMonthKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
-function SpendingCharts({ expenses, categories, currentMonth }) {
+function SpendingCharts({ expenses, categories, currentMonth, currencyCode = 'USD' }) {
+  const currency = new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode, maximumFractionDigits: 0 })
   const { categoryTotals, monthlyTotals } = useMemo(() => {
     const currentMonthExpenses = expenses.filter((expense) => expense.spentOn.startsWith(currentMonth))
     const categoryAmounts = new Map(categories.map((category) => [category, 0]))

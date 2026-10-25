@@ -1,6 +1,6 @@
 import CurrencyAmountInput from './CurrencyAmountInput.jsx'
 
-function BudgetForm({ amount, onAmountChange, onSubmit, hasBudget, saving }) {
+function BudgetForm({ amount, onAmountChange, onSubmit, hasBudget, saving, currencyCode }) {
   return (
     <form className="budget-form" onSubmit={onSubmit}>
       <label htmlFor="monthlyBudget">{hasBudget ? 'Update monthly limit' : 'Monthly limit'}</label>
@@ -13,6 +13,7 @@ function BudgetForm({ amount, onAmountChange, onSubmit, hasBudget, saving }) {
           placeholder="e.g. 2500"
           value={amount}
           onChange={onAmountChange}
+          currencyCode={currencyCode}
         />
         <button className="budget-save-button" type="submit" disabled={saving}>
           {saving ? 'Saving…' : hasBudget ? 'Update' : 'Set budget'}

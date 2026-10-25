@@ -1,10 +1,5 @@
 import { useMemo, useState } from 'react'
 
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
-
 const expenseDate = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
@@ -26,6 +21,7 @@ function ExpenseList({
   deletingExpenseId,
   onEdit,
   onDelete,
+  currencyCode = 'USD',
 }) {
   const [search, setSearch] = useState('')
   const [monthFilter, setMonthFilter] = useState('')
@@ -48,6 +44,7 @@ function ExpenseList({
   }, [expenses, search, monthFilter, categoryFilter, dateFrom, dateTo])
 
   const hasFilters = Boolean(search || monthFilter || categoryFilter || dateFrom || dateTo)
+  const currency = new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode })
 
   function clearFilters() {
     setSearch('')

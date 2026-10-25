@@ -1,7 +1,9 @@
-function CurrencyAmountInput({ id, name, value, onChange, min = '0.01', step = '0.01', placeholder = '0.00', required = true }) {
+function CurrencyAmountInput({ id, name, value, onChange, currencyCode = 'USD', min = '0.01', step = '0.01', placeholder = '0.00', required = true }) {
+  const currencySymbol = new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode })
+    .formatToParts(0).find((part) => part.type === 'currency')?.value || currencyCode
   return (
     <div className="amount-input">
-      <span aria-hidden="true">$</span>
+      <span aria-hidden="true">{currencySymbol}</span>
       <input
         id={id}
         name={name}

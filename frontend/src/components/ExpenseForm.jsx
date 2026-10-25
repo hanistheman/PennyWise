@@ -2,6 +2,7 @@ import CurrencyAmountInput from './CurrencyAmountInput.jsx'
 
 function ExpenseForm({
   categories,
+  currencyCode,
   description,
   amount,
   category,
@@ -44,6 +45,7 @@ function ExpenseForm({
               name="amount"
               value={amount}
               onChange={onAmountChange}
+              currencyCode={currencyCode}
             />
           </div>
           <div className="field-group">

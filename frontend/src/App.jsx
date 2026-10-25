@@ -5,6 +5,7 @@ import ExpenseForm from './components/ExpenseForm.jsx'
 import ExpenseList from './components/ExpenseList.jsx'
 import SpendingCharts from './components/SpendingCharts.jsx'
 import AuthPage from './components/AuthPage.jsx'
+import RecurringExpenseManager from './components/RecurringExpenseManager.jsx'
 
 const defaultCategories = ['Food & drink', 'Transport', 'Shopping', 'Home', 'Health', 'Other']
 const currencyOptions = [
@@ -485,6 +486,8 @@ function FinanceApp({ user, onLogout }) {
           </div>
         )}
       </section>
+
+      <RecurringExpenseManager categories={categories} currencyCode={currencyCode} />
 
       <section className="panel preferences-panel" aria-labelledby="preferences-title">
         <div className="panel-heading">

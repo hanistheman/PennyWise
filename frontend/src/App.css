@@ -123,6 +123,32 @@
 .custom-category-list button:hover { background: #fff; }
 .custom-category-list button:disabled { cursor: not-allowed; opacity: .45; }
 
+.recurring-panel { margin-top: 18px; overflow: hidden; }
+.recurring-form { display: grid; grid-template-columns: minmax(130px, 1.4fr) minmax(105px, .8fr) minmax(110px, 1fr) minmax(105px, .9fr) minmax(125px, 1fr) auto; align-items: end; gap: 9px; padding: 16px 22px; border-bottom: 1px solid #eff1ed; }
+.recurring-field { display: flex; min-width: 0; flex-direction: column; gap: 7px; }
+.recurring-field label { color: #59645b; font-size: 10px; font-weight: 700; }
+.recurring-field > input, .recurring-field select, .recurring-amount-input input { width: 100%; height: 38px; box-sizing: border-box; padding: 0 9px; border: 1px solid #e2e7e0; border-radius: 7px; outline: none; color: #28342a; background: #fff; font: inherit; font-size: 10px; }
+.recurring-field > input:focus, .recurring-field select:focus, .recurring-amount-input input:focus { border-color: #6f9675; box-shadow: 0 0 0 3px rgba(78, 125, 84, .1); }
+.recurring-amount-input { position: relative; }
+.recurring-amount-input span { position: absolute; top: 11px; left: 8px; color: #879087; font-size: 10px; }
+.recurring-amount-input input { padding-left: 38px; }
+.recurring-add-button { height: 38px; padding: 0 12px; }
+.recurring-list { margin: 0; padding: 0 22px; list-style: none; }
+.recurring-row { display: flex; min-height: 64px; align-items: center; gap: 13px; border-bottom: 1px solid #f0f2ef; }
+.recurring-row:last-child { border-bottom: 0; }
+.recurring-main { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
+.recurring-main strong { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.recurring-main span { color: #8b938b; font-size: 10px; }
+.recurring-row.is-paused .recurring-main strong { color: #8a938b; }
+.recurring-amount { flex-shrink: 0; color: #323c34; font-size: 11px; }
+.recurring-actions { display: flex; align-items: center; gap: 5px; }
+.recurring-actions button { padding: 6px 8px; border: 1px solid #e2e7e0; border-radius: 6px; color: #58735c; background: white; cursor: pointer; font: inherit; font-size: 9px; font-weight: 650; }
+.recurring-actions button:last-child { color: #8e625d; }
+.recurring-actions button:hover:not(:disabled) { background: #f5f7f4; }
+.recurring-actions button:disabled { cursor: wait; opacity: .6; }
+.recurring-empty { min-height: 130px; }
+.recurring-panel .error-message { margin-bottom: 14px; }
+
 .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, .9fr); gap: 18px; margin-top: 20px; align-items: start; }
 .panel { border: 1px solid var(--line); border-radius: 13px; background: white; }
 .transactions-panel { min-height: 350px; }
@@ -230,6 +256,12 @@
   .category-budget-form .budget-save-button { grid-column: 1 / -1; }
   .category-budget-list { grid-template-columns: 1fr; gap: 17px; }
   .preferences-content { grid-template-columns: 1fr; gap: 18px; padding-right: 17px; padding-left: 17px; }
+  .recurring-form { grid-template-columns: 1fr 1fr; padding-right: 17px; padding-left: 17px; }
+  .recurring-description-field, .recurring-add-button { grid-column: 1 / -1; }
+  .recurring-list { padding-right: 15px; padding-left: 15px; }
+  .recurring-row { flex-wrap: wrap; gap: 7px 11px; padding: 12px 0; }
+  .recurring-main { flex-basis: calc(100% - 58px); }
+  .recurring-actions { margin-left: auto; }
   .workspace-grid { grid-template-columns: 1fr; }
   .expense-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-right: 17px; padding-left: 17px; }
   .expense-search-field { grid-column: 1 / -1; }

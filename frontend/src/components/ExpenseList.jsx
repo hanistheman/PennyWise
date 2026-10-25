@@ -10,6 +10,12 @@ const expenseDate = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
   year: 'numeric',
 })
+const expenseMonth = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' })
+
+function formatMonth(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number)
+  return expenseMonth.format(new Date(year, month - 1, 1, 12))
+}
 
 function ExpenseList({
   expenses,
@@ -22,25 +28,30 @@ function ExpenseList({
   onDelete,
 }) {
   const [search, setSearch] = useState('')
+  const [monthFilter, setMonthFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+
+  const availableMonths = useMemo(() => [...new Set(expenses.map((expense) => expense.spentOn.slice(0, 7)))].sort().reverse(), [expenses])
 
   const filteredExpenses = useMemo(() => {
     const query = search.trim().toLocaleLowerCase()
     return expenses.filter((expense) => {
       const matchesQuery = !query || `${expense.description} ${expense.category}`.toLocaleLowerCase().includes(query)
+      const matchesMonth = !monthFilter || expense.spentOn.startsWith(monthFilter)
       const matchesCategory = !categoryFilter || expense.category === categoryFilter
       const matchesStartDate = !dateFrom || expense.spentOn >= dateFrom
       const matchesEndDate = !dateTo || expense.spentOn <= dateTo
-      return matchesQuery && matchesCategory && matchesStartDate && matchesEndDate
+      return matchesQuery && matchesMonth && matchesCategory && matchesStartDate && matchesEndDate
     })
-  }, [expenses, search, categoryFilter, dateFrom, dateTo])
+  }, [expenses, search, monthFilter, categoryFilter, dateFrom, dateTo])
 
-  const hasFilters = Boolean(search || categoryFilter || dateFrom || dateTo)
+  const hasFilters = Boolean(search || monthFilter || categoryFilter || dateFrom || dateTo)
 
   function clearFilters() {
     setSearch('')
+    setMonthFilter('')
     setCategoryFilter('')
     setDateFrom('')
     setDateTo('')
@@ -72,6 +83,13 @@ function ExpenseList({
           <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
             <option value="">All categories</option>
             {categories.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
+        </label>
+        <label className="expense-filter-field expense-month-filter">
+          <span className="visually-hidden">Filter by month</span>
+          <select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)}>
+            <option value="">All months</option>
+            {availableMonths.map((month) => <option key={month} value={month}>{formatMonth(month)}</option>)}
           </select>
         </label>
         <label className="expense-filter-field expense-date-filter">

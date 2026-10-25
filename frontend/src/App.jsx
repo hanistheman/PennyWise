@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import BudgetForm from './components/BudgetForm.jsx'
 import ExpenseForm from './components/ExpenseForm.jsx'
+import ExpenseList from './components/ExpenseList.jsx'
 import SpendingCharts from './components/SpendingCharts.jsx'
 import AuthPage from './components/AuthPage.jsx'
 
@@ -390,61 +391,16 @@ function FinanceApp({ user, onLogout }) {
       </section>
 
       <section className="workspace-grid">
-        <section className="panel transactions-panel">
-          <div className="panel-heading">
-            <div>
-              <h2>Recent expenses</h2>
-              <p>Your latest spending activity</p>
-            </div>
-            <span className="count-pill">{expenses.length}</span>
-          </div>
-
-          {error && <p className="error-message" role="alert">{error}</p>}
-
-          {loading ? (
-            <div className="empty-state"><span className="loading-dot" /> Loading expenses…</div>
-          ) : expenses.length === 0 ? (
-            <div className="empty-state">
-              <span className="empty-icon">✳</span>
-              <strong>No expenses yet</strong>
-              <span>Add your first expense to start seeing your spending here.</span>
-            </div>
-          ) : (
-            <ul className="expense-list">
-              {expenses.map((expense) => (
-                <li className="expense-row" key={expense.id}>
-                  <span className="category-icon" aria-hidden="true">{expense.category.slice(0, 1)}</span>
-                  <div className="expense-main">
-                    <strong>{expense.description}</strong>
-                    <span>{expense.category} <span className="separator">·</span> {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${expense.spentOn}T12:00:00`))}</span>
-                  </div>
-                  <strong className="expense-amount">−{currency.format(Number(expense.amount))}</strong>
-                  <div className="expense-actions">
-                    <button
-                      className="edit-expense-button"
-                      type="button"
-                      aria-label={`Edit ${expense.description}`}
-                      disabled={saving || deletingExpenseId !== null}
-                      onClick={() => beginEditingExpense(expense)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="delete-expense-button"
-                      type="button"
-                      aria-label={`Delete ${expense.description}`}
-                      title="Delete expense"
-                      disabled={saving || deletingExpenseId !== null}
-                      onClick={() => handleDeleteExpense(expense)}
-                    >
-                      {deletingExpenseId === expense.id ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <ExpenseList
+          expenses={expenses}
+          categories={categories}
+          loading={loading}
+          error={error}
+          saving={saving}
+          deletingExpenseId={deletingExpenseId}
+          onEdit={beginEditingExpense}
+          onDelete={handleDeleteExpense}
+        />
 
         <ExpenseForm
           categories={categories}

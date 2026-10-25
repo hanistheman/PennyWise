@@ -115,6 +115,19 @@
 .panel-heading p:not(.eyebrow) { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
 .count-pill { min-width: 28px; height: 26px; box-sizing: border-box; display: grid; place-items: center; padding: 0 8px; border-radius: 8px; color: #68766a; background: #f1f4f0; font-size: 11px; font-weight: 700; }
 
+.expense-filters { display: grid; grid-template-columns: minmax(130px, 1.5fr) minmax(115px, 1fr) minmax(125px, 1fr) minmax(125px, 1fr) auto; align-items: center; gap: 8px; padding: 13px 22px; border-bottom: 1px solid #eff1ed; }
+.expense-search-field, .expense-filter-field { position: relative; display: block; min-width: 0; }
+.expense-search-field input, .expense-filter-field select, .expense-filter-field input { width: 100%; height: 35px; box-sizing: border-box; border: 1px solid #e2e7e0; border-radius: 7px; outline: none; color: #39443b; background: #fff; font: inherit; font-size: 10px; }
+.expense-search-field input { padding: 0 10px 0 30px; }
+.expense-search-field input::-webkit-search-cancel-button { cursor: pointer; }
+.expense-search-icon { position: absolute; z-index: 1; top: 7px; left: 10px; color: #859187; font-size: 17px; line-height: 1; }
+.expense-filter-field select, .expense-filter-field input { padding: 0 8px; }
+.expense-search-field input:focus, .expense-filter-field select:focus, .expense-filter-field input:focus { border-color: #6f9675; box-shadow: 0 0 0 3px rgba(78, 125, 84, .1); }
+.clear-expense-filters { padding: 7px 8px; border: 0; border-radius: 6px; color: #58735c; background: transparent; cursor: pointer; font: inherit; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.clear-expense-filters:hover { background: #f1f5ef; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+.filter-empty-state { min-height: 190px; }
+
 .expense-list { list-style: none; margin: 0; padding: 0 22px; }
 .expense-row { display: flex; min-height: 70px; align-items: center; gap: 12px; border-bottom: 1px solid #f0f2ef; }
 .expense-row:last-child { border-bottom: 0; }
@@ -201,6 +214,9 @@
   .category-budget-form .budget-save-button { grid-column: 1 / -1; }
   .category-budget-list { grid-template-columns: 1fr; gap: 17px; }
   .workspace-grid { grid-template-columns: 1fr; }
+  .expense-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-right: 17px; padding-left: 17px; }
+  .expense-search-field { grid-column: 1 / -1; }
+  .clear-expense-filters { justify-self: start; }
 }
 
 @media (max-width: 420px) {

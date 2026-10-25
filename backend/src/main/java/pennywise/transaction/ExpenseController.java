@@ -1,7 +1,11 @@
 package pennywise.transaction;
 
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
+import java.time.YearMonth;
 import java.util.List;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,6 +36,20 @@ public class ExpenseController {
 	@GetMapping
 	public List<Expense> listExpenses(Authentication authentication) {
 		return expenseRepository.findAllByOwner_IdOrderBySpentOnDescIdDesc(currentUser(authentication).getId());
+	}
+
+	@GetMapping("/monthly-totals")
+	public List<MonthlyExpenseTotal> monthlyTotals(Authentication authentication) {
+		return expenseRepository.findAllByOwner_IdOrderBySpentOnDescIdDesc(currentUser(authentication).getId())
+				.stream()
+				.collect(Collectors.groupingBy(
+						expense -> YearMonth.from(expense.getSpentOn()),
+						TreeMap::new,
+						Collectors.reducing(BigDecimal.ZERO, Expense::getAmount, BigDecimal::add)))
+				.entrySet()
+				.stream()
+				.map(entry -> new MonthlyExpenseTotal(entry.getKey(), entry.getValue()))
+				.toList();
 	}
 
 	@PostMapping
